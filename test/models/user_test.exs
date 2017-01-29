@@ -3,7 +3,7 @@ defmodule Folklore.UserTest do
 
   alias Folklore.User
 
-  @valid_attrs %{email: "some content", password_digest: "some content", username: "some content"}
+  @valid_attrs %{email: "test@test.com", password: "123456", password_confirmation: "123456", username: "test"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
