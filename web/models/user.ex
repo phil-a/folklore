@@ -1,5 +1,6 @@
 defmodule Folklore.User do
   use Folklore.Web, :model
+  import Comeonin.Bcrypt, only: [hashpwsalt: 1]
 
   schema "users" do
     field :username, :string
@@ -24,7 +25,11 @@ defmodule Folklore.User do
   end
 
   defp hash_password(changeset) do
-    changeset
-    |> put_change(:password_digest, "ABCDE")
+    if password = get_change(changeset, :password) do
+      changeset
+      |> put_change(:password_digest, hashpwsalt(password))
+    else
+      changeset
+    end
   end
 end
