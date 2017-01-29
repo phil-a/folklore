@@ -17,6 +17,7 @@ defmodule Folklore.Router do
     pipe_through :browser # Use the default browser stack
     resources "/posts", PostController
     resources "/users", UserController
+    resources "/sessions", SessionController, only: [:new, :create]
     get "/", PageController, :index
   end
 
