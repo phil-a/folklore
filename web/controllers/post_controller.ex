@@ -1,7 +1,8 @@
 defmodule Folklore.PostController do
   use Folklore.Web, :controller
-
   alias Folklore.Post
+
+  plug :assign_user
 
   def index(conn, _params) do
     posts = Repo.all(Post)
@@ -20,7 +21,7 @@ defmodule Folklore.PostController do
       {:ok, _post} ->
         conn
         |> put_flash(:info, "Post created successfully.")
-        |> redirect(to: post_path(conn, :index))
+        |> redirect(to: user_post_path(conn, :index, conn.assigns[:user]))
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
@@ -45,7 +46,7 @@ defmodule Folklore.PostController do
       {:ok, post} ->
         conn
         |> put_flash(:info, "Post updated successfully.")
-        |> redirect(to: post_path(conn, :show, post))
+        |> redirect(to: user_post_path(conn, :show, conn.assigns[:user], post))
       {:error, changeset} ->
         render(conn, "edit.html", post: post, changeset: changeset)
     end
@@ -60,6 +61,17 @@ defmodule Folklore.PostController do
 
     conn
     |> put_flash(:info, "Post deleted successfully.")
-    |> redirect(to: post_path(conn, :index))
+    |> redirect(to: user_post_path(conn, :index, conn.assigns[:user]))
   end
+
+  defp assign_user(conn, _opts) do
+    case conn.params do
+      %{"user_id" => user_id} ->
+        user = Repo.get(Folklore.User, user_id)
+        assign(conn, :user, user)
+      _ ->
+        conn
+    end
+  end
+
 end
