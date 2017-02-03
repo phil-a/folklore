@@ -8,6 +8,7 @@ defmodule Folklore.User do
     field :password_digest, :string
 
     has_many :posts, Folklore.Post
+    belongs_to :role, Folklore.Role
     timestamps()
 
     # Virtual Fields
