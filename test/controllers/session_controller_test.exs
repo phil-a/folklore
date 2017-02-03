@@ -1,10 +1,12 @@
 defmodule Folklore.SessionControllerTest do
   use Folklore.ConnCase
+
   alias Folklore.User
+  alias Folklore.TestHelper
 
   setup do
-    User.changeset(%User{}, %{username: "test", password: "test", password_confirmation: "test", email: "test@test.com"})
-    |> Repo.insert
+    {:ok, role} = TestHelper.create_role(%{name: "User", admin: false})
+    {:ok, _user} = TestHelper.create_user(role, %{username: "test", password: "test", password_confirmation: "test", email: "test@test.com"})
     {:ok, conn: build_conn()}
   end
 
