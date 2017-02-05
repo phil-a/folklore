@@ -4,6 +4,7 @@ defmodule Folklore.Factory do
   alias Folklore.Role
   alias Folklore.User
   alias Folklore.Post
+  alias Folklore.Comment
 
   def role_factory do
     %Role{
@@ -28,6 +29,15 @@ defmodule Folklore.Factory do
       title: "Some Post",
       body: "The body of some post",
       user: build(:user)
+    }
+  end
+
+  def comment_factory do
+    %Comment{
+      author: "Test User",
+      body: "This is a sample comment",
+      approved: false,
+      post: build(:post)
     }
   end
 

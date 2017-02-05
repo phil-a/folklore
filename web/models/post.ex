@@ -6,6 +6,7 @@ defmodule Folklore.Post do
     field :body, :string
 
     belongs_to :user, Folklore.User
+    has_many :comments, Folklore.Comment
     timestamps()
   end
 
