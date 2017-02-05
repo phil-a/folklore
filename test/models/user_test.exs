@@ -1,14 +1,13 @@
 defmodule Folklore.UserTest do
   use Folklore.ModelCase
-
+  import Folklore.Factory
   alias Folklore.User
-  alias Folklore.TestHelper
 
   @valid_attrs %{email: "test@test.com", password: "123456", password_confirmation: "123456", username: "test"}
   @invalid_attrs %{}
 
   setup do
-    {:ok, role} = TestHelper.create_role(%{name: "user", admin: false})
+    role = insert(:role, admin: false)
     {:ok, role: role}
   end
 

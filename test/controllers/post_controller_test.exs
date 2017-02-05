@@ -1,18 +1,22 @@
 defmodule Folklore.PostControllerTest do
   use Folklore.ConnCase
-
+  import Folklore.Factory
   alias Folklore.Post
-  alias Folklore.TestHelper
 
   @valid_attrs %{body: "some content", title: "some content"}
   @invalid_attrs %{}
 
   setup do
-    {:ok, role} = TestHelper.create_role(%{name: "User Role", admin: false})
-    {:ok, user} = TestHelper.create_user(role, %{email: "test@test.com", username: "test", password: "test", password_confirmation: "test"})
-    {:ok, post} = TestHelper.create_post(user, %{title: "Test Post", body: "Test Body"})
+    role = insert(:role)
+    user = insert(:user, role: role)
+    post = insert(:post, user: user)
+
+    admin_role = insert(:role, admin: true)
+    admin_user = insert(:user, role: admin_role)
+    other_user = insert(:user, role: role)
+
     conn = build_conn() |> login_user(user)
-    {:ok, conn: conn, user: user, role: role, post: post}
+    {:ok, conn: conn, user: user, role: role, post: post, admin: admin_user, other_user: other_user}
   end
 
   defp login_user(conn, user) do
@@ -80,33 +84,34 @@ defmodule Folklore.PostControllerTest do
     assert conn.halted
   end
 
-  test "redirects when trying to edit a post for a different user", %{conn: conn, role: role, post: post} do
-    {:ok, other_user} = TestHelper.create_user(role, %{email: "test2@test.com", username: "test2", password: "test", password_confirmation: "test"})
+  test "redirects when trying to edit a post for a different user", %{conn: conn, post: post, other_user: other_user} do
     conn = get conn, user_post_path(conn, :edit, other_user, post)
     assert get_flash(conn, :error) == "You are not authorized to modify that post."
     assert redirected_to(conn) == page_path(conn, :index)
     assert conn.halted
   end
 
-  test "redirects when trying to delete a post for a different user", %{conn: conn, role: role, post: post} do
-    {:ok, other_user} = TestHelper.create_user(role, %{email: "test2@test.com", username: "test2", password: "test", password_confirmation: "test"})
+  test "redirects when trying to update a post for a different user", %{conn: conn, post: post, other_user: other_user} do
+    conn = put conn, user_post_path(conn, :update, other_user, post), %{"post" => @valid_attrs}
+    assert get_flash(conn, :error) == "You are not authorized to modify that post."
+    assert redirected_to(conn) == page_path(conn, :index)
+    assert conn.halted
+  end
+
+  test "redirects when trying to delete a post for a different user", %{conn: conn, post: post, other_user: other_user} do
     conn = delete conn, user_post_path(conn, :delete, other_user, post)
     assert get_flash(conn, :error) == "You are not authorized to modify that post."
     assert redirected_to(conn) == page_path(conn, :index)
     assert conn.halted
   end
 
-  test "renders form for editing chosen resource when logged in as admin", %{conn: conn, user: user, post: post} do
-    {:ok, role} = TestHelper.create_role(%{name: "Admin", admin: true})
-    {:ok, admin} = TestHelper.create_user(role, %{username: "admin", email: "admin@test.com", password: "test", password_confirmation: "test"})
+  test "renders form for editing chosen resource when logged in as admin", %{conn: conn, user: user, post: post, admin: admin} do
     conn = login_user(conn, admin)
     |> get(user_post_path(conn, :edit, user, post))
     assert html_response(conn, 200) =~ "Edit post"
   end
 
-  test "updates chosen resource and redirects when data is valid when logged in as admin", %{conn: conn, user: user, post: post} do
-    {:ok, role}  = TestHelper.create_role(%{name: "Admin", admin: true})
-    {:ok, admin} = TestHelper.create_user(role, %{username: "admin", email: "admin@test.com", password: "test", password_confirmation: "test"})
+  test "updates chosen resource and redirects when data is valid when logged in as admin", %{conn: conn, user: user, post: post, admin: admin} do
     conn =
       login_user(conn, admin)
       |> put(user_post_path(conn, :update, user, post), post: @valid_attrs)
@@ -114,18 +119,14 @@ defmodule Folklore.PostControllerTest do
     assert Repo.get_by(Post, @valid_attrs)
   end
 
-  test "does not update chosen resource and renders errors when data is invalid when logged in as admin", %{conn: conn, user: user, post: post} do
-    {:ok, role}  = TestHelper.create_role(%{name: "Admin", admin: true})
-    {:ok, admin} = TestHelper.create_user(role, %{username: "admin", email: "admin@test.com", password: "test", password_confirmation: "test"})
+  test "does not update chosen resource and renders errors when data is invalid when logged in as admin", %{conn: conn, user: user, post: post, admin: admin} do
     conn =
       login_user(conn, admin)
       |> put(user_post_path(conn, :update, user, post), post: %{"body" => nil})
     assert html_response(conn, 200) =~ "Edit post"
   end
 
-  test "deletes chosen resource when logged in as admin", %{conn: conn, user: user, post: post} do
-    {:ok, role}  = TestHelper.create_role(%{name: "Admin", admin: true})
-    {:ok, admin} = TestHelper.create_user(role, %{username: "admin", email: "admin@test.com", password: "test", password_confirmation: "test"})
+  test "deletes chosen resource when logged in as admin", %{conn: conn, user: user, post: post, admin: admin} do
     conn =
       login_user(conn, admin)
       |> delete(user_post_path(conn, :delete, user, post))

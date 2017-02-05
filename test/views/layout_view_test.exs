@@ -1,12 +1,11 @@
 defmodule Folklore.LayoutViewTest do
   use Folklore.ConnCase, async: true
-
+  import Folklore.Factory
   alias Folklore.LayoutView
-  alias Folklore.TestHelper
 
   setup do
-    {:ok, role} = TestHelper.create_role(%{name: "User Role", admin: false})
-    {:ok, user} = TestHelper.create_user(role, %{username: "test", password: "test", password_confirmation: "test", email: "test@test.com"})
+    role = insert(:role, admin: false)
+    user = insert(:user, role: role)
     {:ok, conn: build_conn(), user: user}
   end
 

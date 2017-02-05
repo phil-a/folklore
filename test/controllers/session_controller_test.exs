@@ -1,13 +1,12 @@
 defmodule Folklore.SessionControllerTest do
   use Folklore.ConnCase
-
+  import Folklore.Factory
   alias Folklore.User
-  alias Folklore.TestHelper
 
   setup do
-    {:ok, role} = TestHelper.create_role(%{name: "User", admin: false})
-    {:ok, _user} = TestHelper.create_user(role, %{username: "test", password: "test", password_confirmation: "test", email: "test@test.com"})
-    {:ok, conn: build_conn()}
+    role = insert(:role)
+    user = insert(:user, role: role)
+    {:ok, conn: build_conn(), user: user}
   end
 
   test "shows the login form", %{conn: conn} do
@@ -15,8 +14,8 @@ defmodule Folklore.SessionControllerTest do
     assert html_response(conn, 200) =~ "Login"
   end
 
-  test "creates a new user session for a valid user", %{conn: conn} do
-    conn = post conn, session_path(conn, :create), user: %{username: "test", password: "test"}
+  test "creates a new user session for a valid user", %{conn: conn, user: user} do
+    conn = post conn, session_path(conn, :create), user: %{username: user.username, password: user.password}
     assert get_session(conn, :current_user)
     assert get_flash(conn, :info) == "Sign in successful."
     assert redirected_to(conn) == page_path(conn, :index)
@@ -35,8 +34,7 @@ defmodule Folklore.SessionControllerTest do
     assert redirected_to(conn) == page_path(conn, :index)
   end
 
-  test "deletes the user session", %{conn: conn} do
-    user = Repo.get_by(User, %{username: "test"})
+  test "deletes the user session", %{conn: conn, user: user} do
     conn = delete conn, session_path(conn, :delete, user)
     refute get_session(conn, :current_user)
     assert get_flash(conn, :info) == "Signed out successfully."
