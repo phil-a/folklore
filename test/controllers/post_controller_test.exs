@@ -23,6 +23,10 @@ defmodule Folklore.PostControllerTest do
     post conn, session_path(conn, :create), user: %{username: user.username, password: user.password}
   end
 
+  defp logout_user(conn, user) do
+    delete conn, session_path(conn, :delete, user)
+  end
+
   test "lists all entries on index", %{conn: conn, user: user} do
     conn = get conn, user_post_path(conn, :index, user)
     assert html_response(conn, 200) =~ "Listing posts"
@@ -132,6 +136,30 @@ defmodule Folklore.PostControllerTest do
       |> delete(user_post_path(conn, :delete, user, post))
     assert redirected_to(conn) == user_post_path(conn, :index, user)
     refute Repo.get(Post, post.id)
+  end
+
+  test "when logged in as the author, shows chosen resource with author flag set to true", %{conn: conn, user: user, post: post} do
+    conn = login_user(conn, user) |> get(user_post_path(conn, :show, user, post))
+    assert html_response(conn, 200) =~ "Show post"
+    assert conn.assigns[:author_or_admin]
+  end
+
+  test "when logged in as an admin, shows chosen resource with author flag set to true", %{conn: conn, user: user, admin: admin, post: post} do
+    conn = login_user(conn, admin) |> get(user_post_path(conn, :show, user, post))
+    assert html_response(conn, 200) =~ "Show post"
+    assert conn.assigns[:author_or_admin]
+  end
+
+  test "when not logged in, shows chosen resource with author flag set to false", %{conn: conn, user: user, post: post} do
+    conn = logout_user(conn, user) |> get(user_post_path(conn, :show, user, post))
+    assert html_response(conn, 200) =~ "Show post"
+    refute conn.assigns[:author_or_admin]
+  end
+
+  test "when logged in as a different user, shows chosen resource with author flag set to false", %{conn: conn, user: user, other_user: other_user, post: post} do
+    conn = login_user(conn, other_user) |> get(user_post_path(conn, :show, user, post))
+    assert html_response(conn, 200) =~ "Show post"
+    refute conn.assigns[:author_or_admin]
   end
 
 end

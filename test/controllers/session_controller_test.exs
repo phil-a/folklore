@@ -1,7 +1,6 @@
 defmodule Folklore.SessionControllerTest do
   use Folklore.ConnCase
   import Folklore.Factory
-  alias Folklore.User
 
   setup do
     role = insert(:role)
