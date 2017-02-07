@@ -2,7 +2,7 @@ defmodule Folklore.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", Folklore.RoomChannel
+  channel "comments:*", Folklore.CommentChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
