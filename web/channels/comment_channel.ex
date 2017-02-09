@@ -1,5 +1,6 @@
 defmodule Folklore.CommentChannel do
   use Folklore.Web, :channel
+  alias Folklore.CommentHelper
 
   def join("comments:" <> _comment_id, payload, socket) do
     if authorized?(payload) do
@@ -18,18 +19,33 @@ defmodule Folklore.CommentChannel do
   # It is also common to receive messages from the client and
   # broadcast to everyone in the current topic (comments:lobby).
   def handle_in("CREATED_COMMENT", payload, socket) do
-    broadcast socket, "CREATED_COMMENT", payload
-    {:noreply, socket}
+    case CommentHelper.create(payload, socket) do
+      {:ok, comment} ->
+        broadcast socket, "CREATED_COMMENT", Map.merge(payload, %{insertedAt: comment.inserted_at, commentId: comment.id, approved: comment.approved})
+        {:noreply, socket}
+      {:error, _} ->
+        {:noreply, socket}
+    end
   end
 
   def handle_in("APPROVED_COMMENT", payload, socket) do
-    broadcast socket, "APPROVED_COMMENT", payload
-    {:noreply, socket}
+    case CommentHelper.approve(payload, socket) do
+      {:ok, comment} ->
+        broadcast socket, "APPROVED_COMMENT", Map.merge(payload, %{insertedAt: comment.inserted_at, commentId: comment.id})
+        {:noreply, socket}
+      {:error, _} ->
+        {:noreply, socket}
+    end
   end
 
   def handle_in("DELETED_COMMENT", payload, socket) do
-    broadcast socket, "DELETED_COMMENT", payload
-    {:noreply, socket}
+    case CommentHelper.delete(payload, socket) do
+      {:ok, _} ->
+        broadcast socket, "DELETED_COMMENT", payload
+        {:noreply, socket}
+      {:error, _} ->
+        {:noreply, socket}
+    end
   end
 
   # Add authorization logic here as required.
