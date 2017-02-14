@@ -18,7 +18,7 @@
     "javascript-brunch": "~2.0.0",
     "jquery": "^2.2.4",
     "motion-ui": "^1.2.2",
-    "sass-brunch": "^2.10.2",
+    "sass-brunch": "2.6.3",
     "uglify-js-brunch": "~2.0.1"
   }
 }

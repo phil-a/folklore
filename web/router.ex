@@ -21,7 +21,7 @@ defmodule Folklore.Router do
     end
     resources "/sessions", SessionController, only: [:new, :create, :delete]
     get "/", PageController, :index
-    resources "/posts", PostController, only: [] do
+    resources "/posts", PostController, only: [:index] do
       resources "/comments", CommentController, only: [:create, :delete, :update]
     end
   end
